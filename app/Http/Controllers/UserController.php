@@ -154,7 +154,9 @@ class UserController extends Controller
         $user = User::with(['pengurus.komda'])
         ->whereHas('pengurus', function($data) use($userKomda){
            $data->whereHas('komda', function($query) use($userKomda){
-                 $query->where('id', '=', $userKomda->komda_user->komda->id);
+                 if ($userKomda->komda_user && $userKomda->komda_user->komda->id) {
+                    $query->where('id', '=', $userKomda->komda_user->komda->id);
+                 }
             });
         })->role('pengurus')->latest()->paginate(5);
 
@@ -236,7 +238,9 @@ class UserController extends Controller
         $user = User::with(['anggota.komda'])
         ->whereHas('anggota', function($data) use($userKomda){
            $data->whereHas('komda', function($query) use($userKomda){
-                 $query->where('id', '=', $userKomda->pengurus->komda_id);
+                 if ($userKomda->pengurus && $userKomda->pengurus->komda_id) {
+                    $query->where('id', '=', $userKomda->pengurus->komda_id);
+                 }
             });
         })->role('anggota')->latest()->paginate(5);
 
@@ -250,7 +254,12 @@ class UserController extends Controller
         $pengurus = Pengurus::where('user_id', $useAuth->id)->first();
 
         $user = User::whereDoesntHave('roles')->get();
-        $komda = Komda::where('id', $pengurus->komda_id)->get();
+
+        if ($pengurus) {
+            $komda = Komda::where('id', $pengurus->komda_id)->get();
+        }else{
+            $komda = Komda::get();
+        }
 
         return view('anggota.create', ['user' => $user, 'komda' => $komda]);
     }
